@@ -1,0 +1,52 @@
+name: winwin-devops-test
+
+services:
+  # The application is reachable only from the private Compose network.
+  app:
+    build:
+      context: ./app
+    environment:
+      ENV_NAME: "${ENV_NAME:-local}"
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/healthz', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+
+  # The proxy is the sole published entry point and starts after the app is healthy.
+  proxy:
+    image: nginx:1.27-alpine
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+    networks:
+      - backend
+
+networks:
+  # A named user-defined bridge gives service discovery without exposing the app.
+  backend:
+    driver: bridge
