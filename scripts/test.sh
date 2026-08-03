@@ -24,4 +24,5 @@ seq 1 20 | xargs -P 20 -I '{}' sh -c \
   > "$tmp_dir/statuses"
 sort "$tmp_dir/statuses" | uniq -c
 grep -qx '429' "$tmp_dir/statuses"
-printf 'Rate-limit OK: at least one request returned HTTP 429.\n'
+grep -qx '200' "$tmp_dir/statuses"
+printf 'Rate-limit OK: both HTTP 200 and HTTP 429 were observed.\n'

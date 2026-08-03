@@ -31,7 +31,7 @@ $jobs | Remove-Job -Force
 
 $summary = $statuses | Group-Object | Sort-Object Name
 $summary | ForEach-Object { Write-Host ("HTTP {0}: {1}" -f $_.Name, $_.Count) }
-if (429 -notin $statuses) {
-    throw 'Rate-limit test failed: no HTTP 429 response was observed.'
+if (200 -notin $statuses -or 429 -notin $statuses) {
+    throw "Rate-limit test failed: expected both HTTP 200 and 429; observed: $($statuses -join ', ')."
 }
-Write-Host 'Rate-limit OK: at least one request returned HTTP 429.'
+Write-Host 'Rate-limit OK: both HTTP 200 and HTTP 429 were observed.'

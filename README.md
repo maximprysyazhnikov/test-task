@@ -11,7 +11,6 @@ scripts/test.ps1     deterministic local acceptance checks
 k8s/                 Kind config and Kubernetes resources
 docker-compose.yml   mandatory two-service stack
 Makefile             operational shortcuts
-PROMPTS.md           RISEN/CIDI prompt variants and selection
 .github/workflows/   cloud-based Compose acceptance test
 ```
 
@@ -49,7 +48,7 @@ $ curl -s http://localhost:8080/healthz
 {"status":"ok","service":"app","env":"local"}
 ```
 
-`make test` also sends 20 concurrent requests. Its HTTP summary must contain at least one `429` (normally alongside successful responses), proving the per-client 10 r/s nginx limit is active. It also checks end-to-end `X-Request-ID` pass-through. Inspect health and published ports with:
+`make test` also sends 20 concurrent requests. Its HTTP summary must contain both `200` and `429`, proving that normal traffic succeeds while the per-client 10 r/s nginx limit is active. It also checks end-to-end `X-Request-ID` pass-through. Inspect health and published ports with:
 
 ```sh
 docker compose ps
@@ -78,6 +77,7 @@ helm upgrade --install ingress-nginx ingress-nginx \
   --set controller.hostPort.enabled=true \
   --set controller.service.type=NodePort \
   --set controller.watchIngressWithoutClass=false \
+  --set controller.allowSnippetAnnotations=true \
   --set-string controller.nodeSelector."ingress-ready"=true \
   --set controller.admissionWebhooks.enabled=false
 
@@ -113,5 +113,5 @@ The `Compose acceptance tests` GitHub Actions workflow runs automatically for pu
 
 - Python's standard library avoids runtime packages and returns stable compact JSON.
 - nginx preserves an incoming `X-Request-ID` or creates `$request_id` when absent, and records the effective ID in access logs.
-- The app has no published host port. Both containers use healthchecks and `no-new-privileges`; the Kubernetes container also drops all capabilities and uses a read-only root filesystem.
+- The app has no published host port. Both containers use unprivileged identities, healthchecks, and `no-new-privileges`; the Kubernetes container also drops all capabilities and uses a read-only root filesystem.
 - TLS was intentionally omitted because it is optional and would add certificate setup without improving the required local flow.

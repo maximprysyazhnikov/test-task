@@ -23,7 +23,8 @@ services:
 
   # The proxy is the sole published entry point and starts after the app is healthy.
   proxy:
-    image: nginx:1.27-alpine
+    # This image runs nginx as UID 101 instead of root by default.
+    image: nginxinc/nginx-unprivileged:1.27-alpine
     depends_on:
       app:
         condition: service_healthy

@@ -30,6 +30,9 @@ jobs:
       - name: Build and start healthy services
         run: docker compose up --detach --build --wait --wait-timeout 120
 
+      - name: Verify proxy is unprivileged
+        run: test "$(docker compose exec -T proxy id -u)" -ne 0
+
       - name: Run acceptance tests
         run: make test
 

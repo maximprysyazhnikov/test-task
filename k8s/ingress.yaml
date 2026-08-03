@@ -2,6 +2,13 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app
+  annotations:
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "1"
+    # ingress-nginx provides $req_id, preserving a valid incoming ID or
+    # generating one when the client omitted it.
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-Request-ID $req_id;
 spec:
   ingressClassName: nginx
   rules:
