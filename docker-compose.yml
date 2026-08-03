@@ -42,9 +42,6 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    tmpfs:
-      - /var/cache/nginx
-      - /var/run
     networks:
       - backend
 
